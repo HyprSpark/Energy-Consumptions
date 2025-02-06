@@ -1,6 +1,8 @@
 # Importing the necessary libraries
 import pandas as pd
 import sys
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 # Attempting to read the data file
 try:
@@ -51,6 +53,21 @@ def main(df):
   # Filtering the data for the desired days that include any kind of power usage
   filtered_days = filtered_empty_days(grouped_df)
 
-  print(filtered_days.sample(30))
+  print(filtered_days.sample(25))
+
+  sns.set_theme()
+  plt.ylabel('Energy Consumption')
+  plt.xlabel('Time')
+  
+  filtered_days.set_index('Time', inplace=True)
+  plt.plot(filtered_days.index, filtered_days['Total_feeder'])
+  plt.savefig('/workspaces/Energy-Consumptions/energy_consumption_plot.png')
 
 main(df)
+
+def train_test_split(filtered_days):
+  # Splitting the data into training and testing sets
+  train = filtered_days[:int(0.8*(len(filtered_days)))]
+  test = filtered_days[int(0.8*(len(filtered_days))):]
+
+  return train, test
