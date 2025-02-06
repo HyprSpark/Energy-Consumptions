@@ -51,6 +51,6 @@ def main(df):
   # Filtering the data for the desired days that include any kind of power usage
   filtered_days = filtered_empty_days(grouped_df)
 
-  print(filtered_days.sample(20))
+  print(filtered_days.sample(25))
 
 main(df)
