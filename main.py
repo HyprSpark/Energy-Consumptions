@@ -3,6 +3,9 @@ import pandas as pd
 import sys
 import matplotlib.pyplot as plt
 import seaborn as sns
+from sklearn.naive_bayes import GaussianNB
+import numpy as np
+
 
 # Attempting to read the data file
 try:
@@ -41,8 +44,55 @@ def test(df, filtered_days):
   
   print('Total empty cells:', filtered_days.isnull().sum().sum(), "\n\n")
   print(filtered_days.shape)
+
+def train_test_split(filtered_days):
+  # Splitting the data into training and testing sets
+  train = filtered_days[filtered_days['Time'] <= pd.to_datetime('2008-09-23', format='%Y-%m-%d')]
+  test = filtered_days[filtered_days['Time'] > pd.to_datetime('2008-09-23', format='%Y-%m-%d')]
+
+  return train, test
   
+def plot_creation(train, test):
+  sns.set_theme()
+  plt.ylabel('Energy Consumption')
+  plt.xlabel('Time')
+    
+  train.set_index('Time', inplace=True)
+  test.set_index('Time', inplace=True)
+    
+  plt.plot(train.index, train['Total_feeder'], label='Train', color='black')
+  plt.plot(test.index, test['Total_feeder'], label='Test', color='red')
+  plt.legend()
+  plt.savefig('/workspaces/Energy-Consumptions/assets/energy_consumption_plot.png')
   
+def naive_bayes(train):
+    model = GaussianNB()
+
+    # Feature Engineering
+    train['Hour'] = train['Time'].dt.hour
+    train['DayOfWeek'] = train['Time'].dt.dayofweek
+    train['Prev_Consumption'] = train['Total_feeder'].shift(1)
+
+    # Handle missing values by filling them with the previous value
+    train.bfill(inplace=True)
+
+    # Features and target
+    train_x = train[['Hour', 'DayOfWeek', 'Prev_Consumption']].values
+    train_y = train['Total_feeder'].values
+
+    # Check if training data is empty
+    if len(train_x) == 0 or len(train_y) == 0:
+        print("Error: No valid training data available.")
+        sys.exit()
+
+    # Train the model
+    model.fit(train_x, train_y)
+    return model
+
+
+
+
+
 def main(df):
   # Converting the string into a datetime format
   df = time_period(df)
@@ -55,19 +105,12 @@ def main(df):
 
   print(filtered_days.sample(25))
 
-  sns.set_theme()
-  plt.ylabel('Energy Consumption')
-  plt.xlabel('Time')
-  
-  filtered_days.set_index('Time', inplace=True)
-  plt.plot(filtered_days.index, filtered_days['Total_feeder'])
-  plt.savefig('/workspaces/Energy-Consumptions/energy_consumption_plot.png')
+
+  train, test = train_test_split(filtered_days)
+
+  naive_bayes(train)
+
+  #plot_creation(train, test)
 
 main(df)
 
-def train_test_split(filtered_days):
-  # Splitting the data into training and testing sets
-  train = filtered_days[:int(0.8*(len(filtered_days)))]
-  test = filtered_days[int(0.8*(len(filtered_days))):]
-
-  return train, test
