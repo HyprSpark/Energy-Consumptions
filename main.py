@@ -24,6 +24,7 @@ def time_period(df):
   return df
 
 
+
 # Grouping the data by days
 def day_grouping(df):
   # Splitting the data into days
@@ -38,13 +39,6 @@ def filtered_empty_days(grouped_df):
   filtered_days['Total_feeder'] = filtered_days['Total_feeder'].fillna(0)
   return filtered_days
 
-def test(df, filtered_days):
-  print("Total empty cells:", df.isnull().sum().sum(), "\n\n")
-  print(df.shape)
-
-  
-  print('Total empty cells:', filtered_days.isnull().sum().sum(), "\n\n")
-  print(filtered_days.shape)
 
 def custom_train_test_split(filtered_days):
   # Splitting the data into training and testing sets
@@ -70,6 +64,15 @@ def scatter_plot(train):
   sns.scatterplot(x=train['Time'], y=train['Total_feeder'])
   plt.show()
 
+def naive_bayes(train, test):
+  model = GaussianNB()
+
+  # Training the model
+# Convert datetime to numerical values
+  model.fit(train['Time'].to_frame(), train['Total_feeder'].to_frame())
+
+
+
 
 
 
@@ -83,10 +86,15 @@ def main(df):
   # Filtering the data for the desired days that include any kind of power usage
   filtered_days = filtered_empty_days(grouped_df)
 
-  print(filtered_days.sample(25))
-
+  
 
   train, test = custom_train_test_split(filtered_days)
+
+  print(filtered_days.sample(25))
+  predictions = naive_bayes(train, test)
+  print(predictions)
+
+  naive_bayes(train, test)
 
 
   #plot_creation(train, test)
