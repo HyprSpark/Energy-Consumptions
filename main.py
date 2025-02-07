@@ -66,36 +66,9 @@ def plot_creation(train, test):
   plt.legend()
   plt.savefig('/workspaces/Energy-Consumptions/assets/energy_consumption_plot.png')
   
-def naive_bayes(train):
-  # Splitting the data into features and target
-  X = train['Time'].dt.dayofweek
-  y = train['Total_feeder']
-
-  # Splitting the data into training and testing sets
-  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-
-  # Reshaping the data
-  X_train = np.array(X_train).reshape(-1, 1)
-  X_test = np.array(X_test).reshape(-1, 1)
-
-  # Creating the model
-  model = GaussianNB()
-
-  # Fitting the model
-  model.fit(X_train, y_train)
-
-  # Predicting the values
-  y_pred = model.predict(X_test)
-
-  # Calculating the accuracy
-  accuracy = model.score(X_test, y_test)
-
-  print('Accuracy:', accuracy)
-
-  # Plotting the data
-  plt.scatter(X_test, y_test, color='black')
-  plt.plot(X_test, y_pred, color='red')
-  plt.savefig('/workspaces/Energy-Consumptions/assets/naive_bayes_plot.png')
+def scatter_plot(train):
+  sns.scatterplot(x=train['Time'], y=train['Total_feeder'])
+  plt.show()
 
 
 
@@ -115,9 +88,10 @@ def main(df):
 
   train, test = custom_train_test_split(filtered_days)
 
-  naive_bayes(train)
 
   #plot_creation(train, test)
 
 main(df)
+
+print('test for me')
 
