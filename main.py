@@ -37,13 +37,14 @@ def filtered_empty_days(grouped_df):
   # Filtering the data for the desired days
   filtered_days = grouped_df.filter(lambda x: x['Total_feeder'].notna().any())
   filtered_days['Total_feeder'] = filtered_days['Total_feeder'].fillna(0)
+  print(filtered_days.info(), '\n\n\n\n')
   return filtered_days
 
 
 def custom_train_test_split(filtered_days):
   # Splitting the data into training and testing sets
-  train = filtered_days[filtered_days['Time'] <= pd.to_datetime('2008-09-23', format='%Y-%m-%d')]
-  test = filtered_days[filtered_days['Time'] > pd.to_datetime('2008-09-23', format='%Y-%m-%d')]
+  train = filtered_days[filtered_days['Time'] <= pd.to_datetime('2015-11-05', format='%Y-%m-%d')]
+  test = filtered_days[filtered_days['Time'] > pd.to_datetime('2015-11-05', format='%Y-%m-%d')]
 
   return train, test
   
