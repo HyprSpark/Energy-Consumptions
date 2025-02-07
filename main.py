@@ -3,8 +3,7 @@ import pandas as pd
 import sys
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.naive_bayes import GaussianNB
-from sklearn.model_selection import train_test_split
+from statsforecast import StatsForecast
 import numpy as np
 
 
@@ -66,7 +65,7 @@ def scatter_plot(train):
   plt.show()
 
 def naive_bayes(train, test):
-  model = GaussianNB()
+  model = statsforcast()
 
   # Training the model
 # Convert datetime to numerical values
