@@ -4,6 +4,7 @@ import sys
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.naive_bayes import GaussianNB
+from sklearn.model_selection import train_test_split
 import numpy as np
 
 
@@ -45,7 +46,7 @@ def test(df, filtered_days):
   print('Total empty cells:', filtered_days.isnull().sum().sum(), "\n\n")
   print(filtered_days.shape)
 
-def train_test_split(filtered_days):
+def custom_train_test_split(filtered_days):
   # Splitting the data into training and testing sets
   train = filtered_days[filtered_days['Time'] <= pd.to_datetime('2008-09-23', format='%Y-%m-%d')]
   test = filtered_days[filtered_days['Time'] > pd.to_datetime('2008-09-23', format='%Y-%m-%d')]
@@ -66,29 +67,35 @@ def plot_creation(train, test):
   plt.savefig('/workspaces/Energy-Consumptions/assets/energy_consumption_plot.png')
   
 def naive_bayes(train):
-    model = GaussianNB()
+  # Splitting the data into features and target
+  X = train['Time'].dt.dayofweek
+  y = train['Total_feeder']
 
-    # Feature Engineering
-    train['Hour'] = train['Time'].dt.hour
-    train['DayOfWeek'] = train['Time'].dt.dayofweek
-    train['Prev_Consumption'] = train['Total_feeder'].shift(1)
+  # Splitting the data into training and testing sets
+  X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-    # Handle missing values by filling them with the previous value
-    train.bfill(inplace=True)
+  # Reshaping the data
+  X_train = np.array(X_train).reshape(-1, 1)
+  X_test = np.array(X_test).reshape(-1, 1)
 
-    # Features and target
-    train_x = train[['Hour', 'DayOfWeek', 'Prev_Consumption']].values
-    train_y = train['Total_feeder'].values
+  # Creating the model
+  model = GaussianNB()
 
-    # Check if training data is empty
-    if len(train_x) == 0 or len(train_y) == 0:
-        print("Error: No valid training data available.")
-        sys.exit()
+  # Fitting the model
+  model.fit(X_train, y_train)
 
-    # Train the model
-    model.fit(train_x, train_y)
-    return model
+  # Predicting the values
+  y_pred = model.predict(X_test)
 
+  # Calculating the accuracy
+  accuracy = model.score(X_test, y_test)
+
+  print('Accuracy:', accuracy)
+
+  # Plotting the data
+  plt.scatter(X_test, y_test, color='black')
+  plt.plot(X_test, y_pred, color='red')
+  plt.savefig('/workspaces/Energy-Consumptions/assets/naive_bayes_plot.png')
 
 
 
@@ -106,7 +113,7 @@ def main(df):
   print(filtered_days.sample(25))
 
 
-  train, test = train_test_split(filtered_days)
+  train, test = custom_train_test_split(filtered_days)
 
   naive_bayes(train)
 
