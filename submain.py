@@ -66,7 +66,7 @@ def scatter_plot(train):
   plt.xtricks(45)
   plt.savefig('/workspaces/Energy-Consumptions/assets/scatter_plot.png')
 
-def naive_prediction(train, test):
+def naive_bayes(train, test):
   model = statsforcast()
 
   # Training the model
