@@ -48,25 +48,22 @@ def custom_train_test_split(filtered_days):
   
 def plot_creation(train, test):
   sns.set_theme()
-  #plt.figure(figsize=(16,8)
+  plt.figure(figsize=(16,8)
   plt.ylabel('Energy Consumption')
   plt.xlabel('Time')
     
-  train.set_index('Time', inplace=True)
-  test.set_index('Time', inplace=True)
-    
-  plt.plot(train.index, train['Total_feeder'], label='Train', color='black')
-  plt.plot(test.index, test['Total_feeder'], label='Test', color='red')
+  plt.plot(train['Time'], train['Total_feeder'], label='Train Data', color='black')
+  plt.plot(test['Time'], test['Total_feeder'], label='Test Data', color='red')
   plt.legend()
              
-  #plt.title('Energy Consumption over Time')
-  #plt.xtricks(45)
+  plt.title('Energy Consumption over Time')
+  plt.xtricks(45)
   plt.savefig('/workspaces/Energy-Consumptions/assets/energy_consumption_plot_2.png')
   
 def scatter_plot(train):
-  #plt.figure(figsize=(15,8)
+  plt.figure(figsize=(15,8)
   sns.scatterplot(x=train['Time'], y=train['Total_feeder'])
-  #plt.xtricks(45)
+  plt.xtricks(45)
   plt.savefig('/workspaces/Energy-Consumptions/assets/scatter_plot.png')
 
 def naive_prediction(train, test):
@@ -100,8 +97,8 @@ def main(df):
   print(predictions)
 
   naive_bayes(train, test)
-
-
-  #plot_creation(train, test)
+  
+  plot_creation(train, test)  
+  scatter_plot(train) 
 
 main(df)
