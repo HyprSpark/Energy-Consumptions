@@ -126,26 +126,33 @@ def linear_regression(train, test):
     
     return predictions, mse
 
+### DATA ANALYSIS ###
+
+# Data analysis function to compare the models using the RMSE
 def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, linearMSE, naiveMSE, seasonalMSE):
   
-
-  linear_rmse = np.sqrt(linearMSE)
-  naive_rmse = np.sqrt(naiveMSE)
-  seasonal_rmse = np.sqrt(seasonalMSE)
-
+  # Calculate the mean consumption of the dataset
   mean_consumption = df['Total_feeder'].mean()
   print(mean_consumption)
 
-  print('\n\nRoot Mean Squared Error (RMSE) for each model:')
+  linear_rmse = np.sqrt(linearMSE) # Root Mean Squared Error for Linear Regression
+  naive_rmse = np.sqrt(naiveMSE) # Root Mean Squared Error for Naive Model
+  seasonal_rmse = np.sqrt(seasonalMSE) # Root Mean Squared Error for Seasonal Naive Model
+
+  
+  # Print the RMSE for each model
+  print('\n\nRoot Mean Squared Error (RMSE) for each model:') 
   print(f"Linear Regression RMSE: {linear_rmse}")
   print(f"Naive Model RMSE: {naive_rmse}")
   print(f"Seasonal Naive Model RMSE: {seasonal_rmse}")
   print('\n\n')
 
+  # Calculate the RMSE percentage for each model
   rmse_linear_pct = round((linear_rmse / mean_consumption) * 100,2)
   rmse_naive_pct = round((naive_rmse / mean_consumption) * 100,2)
   rmse_seasonal_naive_pct = round((seasonal_rmse / mean_consumption) * 100, 2)
 
+  # Print the RMSE error percentage for each model
   print(f'Error from main;\nLinear error (%): {rmse_linear_pct}% \nNaive error (%) {rmse_naive_pct}% \nSeasonal naive error (%): {rmse_seasonal_naive_pct}%\n\n')
 
 ### MAIN FUNCTION ###
@@ -168,12 +175,13 @@ def main(df):
 
   predictionsNaive, naiveMSE = naive_model(train, test) #   Making predictions using the Naive algorithm, most basic method
 
-  predictionsSeasonalNaive, seasonalMSE = seasonal_naive_model(train, test)
+  predictionsSeasonalNaive, seasonalMSE = seasonal_naive_model(train, test) # Making predictions using the Seasonal Naive algorithm to try and get a better prediction with trends
 
-  dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, linearMSE, naiveMSE, seasonalMSE)
+  dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, linearMSE, naiveMSE, seasonalMSE) # Data analysis function to compare the models using the RMSE
 
+  # Print the predictions for each model
   print(predictionsLinear, '\n\n')
   print(predictionsNaive, '\n\n')
   print(predictionsSeasonalNaive, '\n\n')
 
-main(df)
+main(df) # Calling the main function
