@@ -61,7 +61,7 @@ def naive_model(train, test):
     mse = mean_squared_error(test['Total_feeder'], predictions)
     print(f"Naive Model MSE: {mse}")
     
-    return predictions
+    return predictions, mse
 
 # Making predictions using the Seasonal Naive algorithm to try and get a better prediction with trends
 def seasonal_naive_model(train, test, period=24):
@@ -77,7 +77,7 @@ def seasonal_naive_model(train, test, period=24):
     mse = mean_squared_error(test['Total_feeder'], test['Predictions'])
     print(f"Seasonal Naive Model MSE: {mse}")
 
-    return test['Predictions'].values
+    return test['Predictions'].values, mse
 
 # Making predictions using the Linear Regression algorithm
 def linear_regression(train, test):
@@ -124,7 +124,29 @@ def linear_regression(train, test):
     mse = mean_squared_error(y_test, predictions)
     print(f"Mean Squared Error: {mse}")
     
-    return predictions
+    return predictions, mse
+
+def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, linearMSE, naiveMSE, seasonalMSE):
+  
+
+  linear_rmse = np.sqrt(linearMSE)
+  naive_rmse = np.sqrt(naiveMSE)
+  seasonal_rmse = np.sqrt(seasonalMSE)
+
+  mean_consumption = df['Total_feeder'].mean()
+  print(mean_consumption)
+
+  print('\n\nRoot Mean Squared Error (RMSE) for each model:')
+  print(f"Linear Regression RMSE: {linear_rmse}")
+  print(f"Naive Model RMSE: {naive_rmse}")
+  print(f"Seasonal Naive Model RMSE: {seasonal_rmse}")
+  print('\n\n')
+
+  rmse_linear_pct = round((linear_rmse / mean_consumption) * 100,2)
+  rmse_naive_pct = round((naive_rmse / mean_consumption) * 100,2)
+  rmse_seasonal_naive_pct = round((seasonal_rmse / mean_consumption) * 100, 2)
+
+  print(f'Error from main;\nLinear error (%): {rmse_linear_pct}% \nNaive error (%) {rmse_naive_pct}% \nSeasonal naive error (%): {rmse_seasonal_naive_pct}%\n\n')
 
 ### MAIN FUNCTION ###
 
@@ -142,25 +164,16 @@ def main(df):
   train, test = custom_train_test_split(filtered_days)
 
 
-  predictionsLinear = linear_regression(train, test) # Making predictions using the Linear Regression algorithm
+  predictionsLinear, linearMSE = linear_regression(train, test) # Making predictions using the Linear Regression algorithm
 
-  predictionsNaive = naive_model(train, test) #   Making predictions using the Naive algorithm, most basic method
+  predictionsNaive, naiveMSE = naive_model(train, test) #   Making predictions using the Naive algorithm, most basic method
 
-  predictionsSeasonalNaive = seasonal_naive_model(train, test)
+  predictionsSeasonalNaive, seasonalMSE = seasonal_naive_model(train, test)
+
+  dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, linearMSE, naiveMSE, seasonalMSE)
 
   print(predictionsLinear, '\n\n')
   print(predictionsNaive, '\n\n')
   print(predictionsSeasonalNaive, '\n\n')
-
-  linear_rmse = np.sqrt(predictionsLinear.mean())
-  naive_rmse = np.sqrt(predictionsNaive.mean())
-  seasonal_rmse = np.sqrt(predictionsSeasonalNaive.mean())
-
-  main_rmse = np.sqrt(train['Total_feeder'].mean())
-
-  print(f"main RMSE: {main_rmse}")
-  print(f"Linear Regression RMSE: {linear_rmse}")
-  print(f"Naive Model RMSE: {naive_rmse}")
-  print(f"Seasonal Naive Model RMSE: {seasonal_rmse}")
 
 main(df)
