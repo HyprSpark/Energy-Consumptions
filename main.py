@@ -17,6 +17,7 @@ except FileNotFoundError: # Checking if the file is not found
   print('File name incorrect or not found')
   sys.exit() # Exits the program
 
+### DATA PREPROCESSING ###
 
 # Converting the string into a datetime format
 def time_period(df):
@@ -47,16 +48,9 @@ def custom_train_test_split(filtered_days):
 
   return train, test
 
+### PREDICTION MODELS ###
 
-# Making predictions using the Naive Bayes algorithm
-#def naive_bayes(train, test):
-  #from sklearn.naive_bayes import GaussianNB
-
-
-  # Convert datetime to numerical values
-  #model.fit(train['Time'].to_frame(), train['Total_feeder'].to_frame()) # Fitting the model
-
-
+# Making predictions using the Naive algorithm, most basic method
 def naive_model(train, test):
     # Use the last observed value for all future predictions
     last_value = train['Total_feeder'].iloc[-1]
@@ -69,11 +63,8 @@ def naive_model(train, test):
     
     return predictions
 
+# Making predictions using the Seasonal Naive algorithm to try and get a better prediction with trends
 def seasonal_naive_model(train, test, period=24):
-    """
-    Uses the value from 'period' hours ago as prediction.
-    If period is too large, try reducing it (e.g., 12 hours).
-    """
     test = test.copy()
 
     # Shift data by 'period' steps
@@ -84,21 +75,19 @@ def seasonal_naive_model(train, test, period=24):
 
     # Calculate Mean Squared Error
     mse = mean_squared_error(test['Total_feeder'], test['Predictions'])
-    print(f"Fixed Seasonal Naive Model MSE: {mse}")
+    print(f"Seasonal Naive Model MSE: {mse}")
 
     return test['Predictions'].values
 
-
-
-
+# Making predictions using the Linear Regression algorithm
 def linear_regression(train, test):
     # Ensure we are not modifying the original datasets
     train = train.copy()
     test = test.copy()
     
     # Check if 'Time' is in datetime format
-    if not np.issubdtype(train['Time'].dtype, np.datetime64):
-        train['Time'] = pd.to_datetime(train['Time'])
+    if not np.issubdtype(train['Time'].dtype, np.datetime64): # Checking if the data type is datetime
+        train['Time'] = pd.to_datetime(train['Time']) # Converting the data type to datetime
         test['Time'] = pd.to_datetime(test['Time'])
 
     # Extracting additional time-based features
@@ -107,17 +96,18 @@ def linear_regression(train, test):
     train['Month'] = train['Time'].dt.month
     train['Day'] = train['Time'].dt.day
 
+    # Extracting additional time-based features
     test['DayOfWeek'] = test['Time'].dt.dayofweek
     test['Hour'] = test['Time'].dt.hour
     test['Month'] = test['Time'].dt.month
     test['Day'] = test['Time'].dt.day
 
     # Prepare features and target
-    X_train = train[['DayOfWeek', 'Hour', 'Month', 'Day']]
-    y_train = train['Total_feeder']
+    X_train = train[['DayOfWeek', 'Hour', 'Month', 'Day']] # Features
+    y_train = train['Total_feeder'] # Target
 
-    X_test = test[['DayOfWeek', 'Hour', 'Month', 'Day']]
-    y_test = test['Total_feeder']
+    X_test = test[['DayOfWeek', 'Hour', 'Month', 'Day']] # Features
+    y_test = test['Total_feeder'] # Target
 
     # Drop NaN values if any
     X_train, y_train = X_train.dropna(), y_train.dropna()
@@ -136,7 +126,7 @@ def linear_regression(train, test):
     
     return predictions
 
-
+### MAIN FUNCTION ###
 
 def main(df):
   # Converting the string into a datetime format
@@ -152,9 +142,9 @@ def main(df):
   train, test = custom_train_test_split(filtered_days)
 
 
-  predictionsLinear = linear_regression(train, test)
+  predictionsLinear = linear_regression(train, test) # Making predictions using the Linear Regression algorithm
 
-  predictionsNaive = naive_model(train, test)
+  predictionsNaive = naive_model(train, test) #   Making predictions using the Naive algorithm, most basic method
 
   predictionsSeasonalNaive = seasonal_naive_model(train, test)
 
@@ -162,7 +152,15 @@ def main(df):
   print(predictionsNaive, '\n\n')
   print(predictionsSeasonalNaive, '\n\n')
 
+  linear_rmse = np.sqrt(predictionsLinear.mean())
+  naive_rmse = np.sqrt(predictionsNaive.mean())
+  seasonal_rmse = np.sqrt(predictionsSeasonalNaive.mean())
 
+  main_rmse = np.sqrt(train['Total_feeder'].mean())
 
+  print(f"main RMSE: {main_rmse}")
+  print(f"Linear Regression RMSE: {linear_rmse}")
+  print(f"Naive Model RMSE: {naive_rmse}")
+  print(f"Seasonal Naive Model RMSE: {seasonal_rmse}")
 
 main(df)
