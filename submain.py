@@ -55,21 +55,15 @@ def plot_creation(train, test):
   plt.legend()
              
   plt.title('Energy Consumption over Time')
-  plt.xtricks()
-  plt.savefig('/workspaces/Energy-Consumptions/assets/energy_consumption_plot_2.png')
+  plt.xticks(rotation=45)
+  plt.savefig('energy_consumption_plot_2.png')
   
 def scatter_plot(train):
   plt.figure(figsize=(16,8))
   sns.scatterplot(x=train['Time'], y=train['Total_feeder'])
-  plt.xtricks()
-  plt.savefig('/workspaces/Energy-Consumptions/assets/scatter_plot.png')
-
-def naive_bayes(train, test):
-  model = statsforcast()
-
-  # Training the model
-# Convert datetime to numerical values
-  model.fit(train['Time'].to_frame(), train['Total_feeder'].to_frame())
+  plt.xticks(rotation=45)
+  plt.title('Energy Consumption over Time')
+  plt.savefig('scatter_plot.png')
 
 
 def main(df):
@@ -87,11 +81,8 @@ def main(df):
   train, test = custom_train_test_split(filtered_days)
 
   print(filtered_days.sample(25))
-  predictions = naive_bayes(train, test)
-  print(predictions)
 
-  naive_bayes(train, test)
-  
+
   plot_creation(train, test)  
   scatter_plot(train) 
 
