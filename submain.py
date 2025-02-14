@@ -57,13 +57,13 @@ def plot_creation(train, test):
   plt.legend()
              
   plt.title('Energy Consumption over Time')
-  plt.xtricks(45)
+  plt.xtricks(rotate=45)
   plt.savefig('/workspaces/Energy-Consumptions/assets/energy_consumption_plot_2.png')
   
 def scatter_plot(train):
   plt.figure(figsize=(15,8))
   sns.scatterplot(x=train['Time'], y=train['Total_feeder'])
-  plt.xtricks(45)
+  plt.xtricks(rotate=45)
   plt.savefig('/workspaces/Energy-Consumptions/assets/scatter_plot.png')
 
 def naive_bayes(train, test):
