@@ -23,8 +23,6 @@ def time_period(df):
   
   return df
 
-
-
 # Grouping the data by days
 def day_grouping(df):
   grouped_df = df.groupby(df['Time'].dt.date) # Grouping the data by days
@@ -57,13 +55,13 @@ def plot_creation(train, test):
   plt.legend()
              
   plt.title('Energy Consumption over Time')
-  plt.xtricks(rotate=45)
+  plt.xtricks()
   plt.savefig('/workspaces/Energy-Consumptions/assets/energy_consumption_plot_2.png')
   
 def scatter_plot(train):
-  plt.figure(figsize=(15,8))
+  plt.figure(figsize=(16,8))
   sns.scatterplot(x=train['Time'], y=train['Total_feeder'])
-  plt.xtricks(rotate=45)
+  plt.xtricks()
   plt.savefig('/workspaces/Energy-Consumptions/assets/scatter_plot.png')
 
 def naive_bayes(train, test):
@@ -72,10 +70,6 @@ def naive_bayes(train, test):
   # Training the model
 # Convert datetime to numerical values
   model.fit(train['Time'].to_frame(), train['Total_feeder'].to_frame())
-
-
-
-
 
 
 def main(df):
