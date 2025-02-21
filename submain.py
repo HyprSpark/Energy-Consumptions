@@ -8,6 +8,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 
 
+
 # Attempting to read the data file
 try:
   df = pd.read_csv('DataSheets/Energy Advice and Cunsumption Prediction Dataset.csv', names=['Time', 'Total_feeder'], skiprows=1) # Giving the columns names and skipping the first row
@@ -47,6 +48,10 @@ def custom_train_test_split(filtered_days):
   test = filtered_days[filtered_days['Time'] > pd.to_datetime('2015-11-30', format='%Y-%m-%d')] # Testing set
 
   return train, test
+
+
+
+
 
 ### PREDICTION MODELS ###
 
@@ -126,10 +131,13 @@ def linear_regression(train, test):
     
     return predictions, mse
 
+
+
+
 ### DATA ANALYSIS ###
 
 # Data analysis function to compare the models using the RMSE
-def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, linearMSE, naiveMSE, seasonalMSE):
+def dataAnalysis(predictionsNaive, predictionsSeasonalNaive, predictionsLinear, linearMSE, naiveMSE, seasonalMSE):
   
   # Calculate the mean consumption of the dataset
   mean_consumption = df['Total_feeder'].mean()
@@ -154,7 +162,13 @@ def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, 
   # Print the RMSE error percentage for each model
   print(f'Error from main;\nLinear error (%): {rmse_linear_pct}% \nNaive error (%) {rmse_naive_pct}% \nSeasonal naive error (%): {rmse_seasonal_naive_pct}%\n\n')
 
+
+
+
+
 ### VISUALISING DATA ###
+
+##Plotting All Prediction Models##
 
 def plot_Predictions(test, predictionsNaive, predictionsSeasonalNaive, predictionsLinear):
   #Setting Up Graph
@@ -163,19 +177,17 @@ def plot_Predictions(test, predictionsNaive, predictionsSeasonalNaive, predictio
   plt.title('Prediced Energy Consumption Over Time')
   plt.ylabel('Energy Consumption')
   plt.xlabel('Time')
-  #plt.xticks(rotation=45)
-  
   #Plot Actual Data 
-  plt.plot(test['Time'], test['Total_feeder'], label='Test Data', color='red', linestyle='solid' )
-
+  plt.plot(test['Time'], test['Total_feeder'], label='Test Data', color='red', linestyle='solid')
   #Plot Prediction Models
   plt.plot(test['Time'], predictionsNaive , label='Naive Model', color='green', linestyle='dotted')
   plt.plot(test['Time'], predictionsSeasonalNaive, label='Seasonal Naive Model', color='Blue', linestyle='dashed')
   plt.plot(test['Time'], predictionsLinear, label='Linear Regression Model', color='Orange', linestyle='dashdot')  
-
-  #Saving Graph
+  #Saving Graph and adding legend
   plt.legend()
   plt.savefig('Prediction Model Visualisation.png')
+
+##Plotting Basic Naive Model##
 
 def plot_Naive_Model(test, predictionsNaive):
   #Setting Up Graph
@@ -184,14 +196,14 @@ def plot_Naive_Model(test, predictionsNaive):
   plt.title('Prediced Energy Consumption Over Time')
   plt.ylabel('Energy Consumption')
   plt.xlabel('Time')
-  
   #Plot Actual Data 
-  plt.plot(test['Time'], test['Total_feeder'], label='Test Data', color='red', linestyle='solid' )
+  plt.plot(test['Time'], test['Total_feeder'], label='Test Data', color='red', linestyle='solid')
   plt.plot(test['Time'], predictionsNaive , label='Naive Model', color='green', linestyle='dotted')
-
-  #Saving Graph
+  #Saving Graph and adding legend
   plt.legend()
   plt.savefig('Naive Model Visualisation.png')
+
+##Plotting Sesional Naive Model##
 
 def plot_Sesonal_Naive_model(test, predictionsSeasonalNaive):
   #Setting Up Graph
@@ -200,14 +212,33 @@ def plot_Sesonal_Naive_model(test, predictionsSeasonalNaive):
   plt.title('Prediced Energy Consumption Over Time')
   plt.ylabel('Energy Consumption')
   plt.xlabel('Time')
-  
   #Plot Actual Data 
   plt.plot(test['Time'], test['Total_feeder'], label='Test Data', color='red', linestyle='solid' )
   plt.plot(test['Time'], predictionsSeasonalNaive , label='Seasonal Naive Model', color='Blue', linestyle='dashed')
-
-  #Saving Graph
+  #Saving Graph and adding legend
   plt.legend()
   plt.savefig('Sesional Naive Model Visualisation.png')
+
+##Plotting Linear Regression Model##
+
+def plot_Linear_Regression_Model(test, predictionsLinear):
+  #Setting Up Graph
+  sns.set_theme(style="whitegrid")
+  plt.figure(figsize=(15,10))
+  plt.title('Prediced Energy Consumption Over Time')
+  plt.ylabel('Energy Consumption')
+  plt.xlabel('Time')
+  #Plot Actual Data 
+  plt.plot(test['Time'], test['Total_feeder'], label='Test Data', color='red', linestyle='solid' )
+  plt.plot(test['Time'], predictionsLinear, label='Linear Regression Model', color='Orange', linestyle='dashdot')
+  #Saving Graph and adding legend
+  plt.legend()
+  plt.savefig('Sesional Linear Regression Model Visualisation.png')
+
+
+
+
+
 
 ### MAIN FUNCTION ###
 
@@ -240,5 +271,8 @@ def main(df):
   plot_Predictions(test, predictionsNaive, predictionsSeasonalNaive, predictionsLinear)
   plot_Naive_Model(test, predictionsNaive)
   plot_Sesonal_Naive_model(test, predictionsSeasonalNaive)
-  
+  plot_Linear_Regression_Model(test, predictionsLinear)
+
 main(df) # Calling the main function
+
+#plt.xticks(rotation=45)
