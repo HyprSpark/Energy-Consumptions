@@ -49,7 +49,7 @@ def filtered_empty_days(grouped_df):
 def custom_train_test_split(filtered_days):
 
   train = filtered_days[(filtered_days['Time'] >= pd.to_datetime('2013-05-13', format='%Y-%m-%d')) & (filtered_days['Time'] <= pd.to_datetime('2013-05-20', format='%Y-%m-%d'))] # Training set
-  test = filtered_days[(filtered_days['Time'] >= pd.to_datetime('2013-05-20', format='%Y-%m-%d')) & (filtered_days['Time'] < pd.to_datetime('2013-05-21', format='%Y-%m-%d'))] # Testing set
+  test = filtered_days[(filtered_days['Time'] > pd.to_datetime('2013-05-20', format='%Y-%m-%d')) & (filtered_days['Time'] <= pd.to_datetime('2013-05-21', format='%Y-%m-%d'))] # Testing set
 
   return train, test
 ### PREDICTION MODELS ###
@@ -130,6 +130,8 @@ def linear_regression(train, test):
     
     return predictions, mse
 
+    
+
 ### DATA ANALYSIS ###
 
 # Data analysis function to compare the models using the RMSE
@@ -158,7 +160,7 @@ def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, 
   rmse_ARIMA = round((ARIMA_rmse / mean_consumption) * 100,2)
 
   # Print the RMSE error percentage for each model
-  print(f'Error from main;\nLinear error (%): {rmse_linear_pct}% \nNaive error (%) {rmse_naive_pct}% \nSeasonal naive error (%): {rmse_seasonal_naive_pct}%\nARIMA error (%): {rmse_ARIMA}%\n\n')
+  print(f'Error from main;\nLinear error (%): {rmse_linear_pct}% \nNaive error (%) {rmse_naive_pct}% \nSeasonal naive error (%): {rmse_seasonal_naive_pct}%\nRMSE error for ARIMA model: {rmse_ARIMA}%')
 
 def plot_autocorrolate(data, lags=50):
   plot_acf(data, lags=lags)
@@ -190,6 +192,7 @@ def ARIMA_test(test, train):
   test_forecast_series = pd.Series(test_forecast, index=test.index)
 
   ARMIAMSE = mean_squared_error(test['Total_feeder'], test_forecast_series)
+  print(f'ARIMA Model MSE: {ARMIAMSE}')
 
   plt.figure(figsize=(10,6))
   plt.plot(train['Total_feeder'], label='Training Data')
@@ -201,6 +204,8 @@ def ARIMA_test(test, train):
   plt.ylabel('Total Feeder')
   plt.legend()
   plt.show()
+
+  return ARMIAMSE
 
 
 def plot_naive_model(train, test, predictionsNaive):
