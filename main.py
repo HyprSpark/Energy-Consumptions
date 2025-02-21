@@ -6,6 +6,10 @@ import seaborn as sns
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
+from statsmodels.tsa.stattools import adfuller
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
+from statsmodels.tsa.arima.model import ARIMA
+
 
 
 # Attempting to read the data file
@@ -43,11 +47,11 @@ def filtered_empty_days(grouped_df):
 
 # Splitting the data into training and testing sets based on a custom date
 def custom_train_test_split(filtered_days):
-  train = filtered_days[filtered_days['Time'] <= pd.to_datetime('2015-11-05', format='%Y-%m-%d')] # Training set
-  test = filtered_days[filtered_days['Time'] > pd.to_datetime('2015-11-05', format='%Y-%m-%d')] # Testing set
+
+  train = filtered_days[(filtered_days['Time'] >= pd.to_datetime('2013-05-13', format='%Y-%m-%d')) & (filtered_days['Time'] <= pd.to_datetime('2013-05-20', format='%Y-%m-%d'))] # Training set
+  test = filtered_days[(filtered_days['Time'] >= pd.to_datetime('2013-05-20', format='%Y-%m-%d')) & (filtered_days['Time'] < pd.to_datetime('2013-05-21', format='%Y-%m-%d'))] # Testing set
 
   return train, test
-
 ### PREDICTION MODELS ###
 
 # Making predictions using the Naive algorithm, most basic method
@@ -129,7 +133,7 @@ def linear_regression(train, test):
 ### DATA ANALYSIS ###
 
 # Data analysis function to compare the models using the RMSE
-def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, linearMSE, naiveMSE, seasonalMSE):
+def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, linearMSE, naiveMSE, seasonalMSE, ARIMAMSE):
   
   # Calculate the mean consumption of the dataset
   mean_consumption = df['Total_feeder'].mean()
@@ -138,7 +142,7 @@ def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, 
   linear_rmse = np.sqrt(linearMSE) # Root Mean Squared Error for Linear Regression
   naive_rmse = np.sqrt(naiveMSE) # Root Mean Squared Error for Naive Model
   seasonal_rmse = np.sqrt(seasonalMSE) # Root Mean Squared Error for Seasonal Naive Model
-
+  ARIMA_rmse = np.sqrt(ARIMAMSE) # Root Mean Squared Error for ARIMA Model
   
   # Print the RMSE for each model
   print('\n\nRoot Mean Squared Error (RMSE) for each model:') 
@@ -151,9 +155,65 @@ def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, 
   rmse_linear_pct = round((linear_rmse / mean_consumption) * 100,2)
   rmse_naive_pct = round((naive_rmse / mean_consumption) * 100,2)
   rmse_seasonal_naive_pct = round((seasonal_rmse / mean_consumption) * 100, 2)
+  rmse_ARIMA = round((ARIMA_rmse / mean_consumption) * 100,2)
 
   # Print the RMSE error percentage for each model
-  print(f'Error from main;\nLinear error (%): {rmse_linear_pct}% \nNaive error (%) {rmse_naive_pct}% \nSeasonal naive error (%): {rmse_seasonal_naive_pct}%\n\n')
+  print(f'Error from main;\nLinear error (%): {rmse_linear_pct}% \nNaive error (%) {rmse_naive_pct}% \nSeasonal naive error (%): {rmse_seasonal_naive_pct}%\nARIMA error (%): {rmse_ARIMA}%\n\n')
+
+def plot_autocorrolate(data, lags=50):
+  plot_acf(data, lags=lags)
+  plot_pacf(data, lags=lags)
+  plt.savefig('acf_pacf_plot.jpg')
+
+def run_ARIMA(data):
+  data = data.copy()
+  data.index = pd.to_datetime(data.index)
+
+  data = data.asfreq('h')
+
+  model = ARIMA(data, order=(1,1,0))
+  model_fit = model.fit()
+
+  forecast - model_fit.get_forecast(steps=30)
+
+def ARIMA_test(test, train):
+  train = train.set_index('Time')
+  test = test.set_index('Time')
+
+  train = train.asfreq('h')
+  test = test.asfreq('h')
+
+  model_train = ARIMA(train['Total_feeder'], order=(1,0,1))
+  model_train_fit = model_train.fit()
+
+  test_forecast = model_train_fit.forecast(steps=30)
+  test_forecast_series = pd.Series(test_forecast, index=test.index)
+
+  ARMIAMSE = mean_squared_error(test['Total_feeder'], test_forecast_series)
+
+  plt.figure(figsize=(10,6))
+  plt.plot(train['Total_feeder'], label='Training Data')
+  plt.plot(test['Total_feeder'], label='Testing Data', color='orange')
+  plt.plot(test_forecast_series, label='ARIMA Forecast', color='red')  
+
+  plt.title('ARIMA Model Forecast')
+  plt.xlabel('Date')
+  plt.ylabel('Total Feeder')
+  plt.legend()
+  plt.show()
+
+
+def plot_naive_model(train, test, predictionsNaive):
+  plt.figure(figsize=(10,6))
+  plt.plot(train['Total_feeder'], label='Training Data')
+  plt.plot(test['Total_feeder'], label='Testing Data', color='orange')
+  plt.plot(test.index, predictionsNaive, label='Naive Forecast', color='red')
+
+  plt.title('Naive Model Forecast')
+  plt.xlabel('Date')
+  plt.ylabel('Total Feeder')
+  plt.legend()
+  plt.show()
 
 ### MAIN FUNCTION ###
 
@@ -170,18 +230,33 @@ def main(df):
   # Splitting the data into training and testing sets based on a custom date
   train, test = custom_train_test_split(filtered_days)
 
-
   predictionsLinear, linearMSE = linear_regression(train, test) # Making predictions using the Linear Regression algorithm
 
   predictionsNaive, naiveMSE = naive_model(train, test) #   Making predictions using the Naive algorithm, most basic method
 
   predictionsSeasonalNaive, seasonalMSE = seasonal_naive_model(train, test) # Making predictions using the Seasonal Naive algorithm to try and get a better prediction with trends
 
-  dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, linearMSE, naiveMSE, seasonalMSE) # Data analysis function to compare the models using the RMSE
+  ARIMAMSE = ARIMA_test(test, train) # ARIMA test
+
+  dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, linearMSE, naiveMSE, seasonalMSE, ARIMAMSE) # Data analysis function to compare the models using the RMSE
 
   # Print the predictions for each model
   print(predictionsLinear, '\n\n')
   print(predictionsNaive, '\n\n')
   print(predictionsSeasonalNaive, '\n\n')
 
+  '''
+  adf_test = adfuller(filtered_days['Total_feeder']) # Applying the ADF test to the data
+  # Output the results
+  print('ADF Statistic: %f' % adf_test[0])
+  print('p-value: %f' % adf_test[1])
+  '''
+  '''
+  plot_autocorrolate(filtered_days['Total_feeder'], lags=50) # Plotting the autocorrelation
+  '''
+ # run_ARIMA(filtered_days['Total_feeder']) # Running the ARIMA model
+
+  
 main(df) # Calling the main function
+
+  
