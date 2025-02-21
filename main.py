@@ -15,7 +15,7 @@ try:
 except FileNotFoundError: # Checking if the file is not found
   # If the file is not found, print an error message and exit the program
   print('File name incorrect or not found')
-  sys.exit() # Exits the program
+  sys.exit() # Exits the program,.-l
 
 ### DATA PREPROCESSING ###
 
