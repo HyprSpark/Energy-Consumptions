@@ -145,7 +145,7 @@ def ARIMA_test(test, train):
   test = test.asfreq('h')
 
   # Create the ARIMA model
-  model_train = ARIMA(train['Total_feeder'], order=(13,1,1))
+  model_train = ARIMA(train['Total_feeder'], order=(12,1,1))
   model_train_fit = model_train.fit()
 
   # Forecast the data
