@@ -9,7 +9,6 @@ from sklearn.metrics import mean_squared_error
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.arima.model import ARIMA
-from mango import scheduler, Tuner
 
 
 
@@ -146,7 +145,7 @@ def ARIMA_test(test, train):
   test = test.asfreq('h')
 
   # Create the ARIMA model
-  model_train = ARIMA(train['Total_feeder'], order=(2,1,0))
+  model_train = ARIMA(train['Total_feeder'], order=(13,1,1))
   model_train_fit = model_train.fit()
 
   # Forecast the data
