@@ -52,9 +52,9 @@ def filtered_empty_days(grouped_df):
 # Splitting the data into training and testing sets based on a custom date
 def custom_train_test_split(filtered_days):
 
-  train = filtered_days[(filtered_days['Time'] >= pd.to_datetime('2013-04-24', format='%Y-%m-%d')) & (filtered_days['Time'] <= pd.to_datetime('2013-05-20', format='%Y-%m-%d'))] # Training set
-  test = filtered_days[(filtered_days['Time'] > pd.to_datetime('2013-04-30', format='%Y-%m-%d')) & (filtered_days['Time'] <= pd.to_datetime('2013-05-21', format='%Y-%m-%d'))] # Testing set
-
+  train = filtered_days[(filtered_days['Time'] >= pd.to_datetime('2013-05-13', format='%Y-%m-%d')) & (filtered_days['Time'] <= pd.to_datetime('2013-05-19', format='%Y-%m-%d'))] # Training set
+  test = filtered_days[(filtered_days['Time'] > pd.to_datetime('2013-05-19', format='%Y-%m-%d')) & (filtered_days['Time'] <= pd.to_datetime('2013-05-20', format='%Y-%m-%d'))]
+  
   return train, test
 
 
