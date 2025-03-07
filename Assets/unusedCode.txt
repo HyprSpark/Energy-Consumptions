@@ -1,0 +1,4 @@
+train = filtered_days[filtered_days['Time'] <= pd.to_datetime('2013-05-15', format='%Y-%m-%d')] # Training set
+  test = filtered_days[filtered_days['Time'] > pd.to_datetime('2013-05-21', format='%Y-%m-%d')] # Testing set
+
+  ARMIAMSE = mean_squared_error(test['Total_feeder'], test_forecast_series)
