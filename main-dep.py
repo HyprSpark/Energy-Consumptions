@@ -219,9 +219,9 @@ def main(df):
   ARIMAMSE, test_forecast_series = ARIMA_test(test, train) # ARIMA test
 
   # Plot the ARIMA Model
-  p_values = [14]
-  d_values = range(0, 2)
-  q_values = range(0, 2)
+  p_values = range(0, 14, 2)
+  d_values = range(0, 4)
+  q_values = range(0, 4)
     
   best_order, best_rmse, best_forecast = evaluate_models(train, test, p_values, d_values, q_values)
 

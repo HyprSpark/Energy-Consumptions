@@ -193,12 +193,26 @@ def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, 
 ## PLOTTING FUNCTIONS ##
 
 def plot_naive_model(train, test, predictionsNaive):
+
   plt.figure(figsize=(10,6))
   plt.plot(train['Total_feeder'], label='Training Data')
   plt.plot(test['Total_feeder'], label='Testing Data', color='orange')
   plt.plot(test.index, predictionsNaive, label='Naive Forecast', color='red')
 
   plt.title('Naive Model Forecast')
+  plt.xlabel('Date')
+  plt.ylabel('Total Feeder')
+  plt.legend()
+  plt.show()
+
+def plot_seasonal_naive_model(train, test, predictionsSeasonalNaive):
+   
+  plt.figure(figsize=(10,6))
+  plt.plot(train['Total_feeder'], label = 'Training Data')
+  plt.plot(test['Total_feeder'], label = 'Testing Data', color = 'orange')
+  plt.plot(test.index, predictionsSeasonalNaive, label = 'Seasonal Naive Forecast', color = 'red')
+
+  plt.title('Seasonal Naive Model Forecast')
   plt.xlabel('Date')
   plt.ylabel('Total Feeder')
   plt.legend()
@@ -260,8 +274,13 @@ def main(df):
   # Plot the Naive Model
   plot_naive_model(train, test, predictionsNaive)
 
+  # Plot the Seasonal Naive Model
+  plot_seasonal_naive_model(train, test, predictionsSeasonalNaive)
+
   # Plot the ARIMA Model
   plot_ARIMA_model(train, test, test_forecast_series)
+
+  
 
 
  
