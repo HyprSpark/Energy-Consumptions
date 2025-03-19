@@ -144,7 +144,7 @@ def linear_regression(train, test):
 
     # Evaluate model performance (using Mean Squared Error)
     mse = mean_squared_error(y_test, predictions)
-    print(f"Mean Squared Error: {mse}")
+    print(f"Linear Regression Model MSE: {mse}")
     
     return predictions, mse
 
@@ -208,7 +208,7 @@ def evaluate_models(train, test):
                 i += 1  # Increment the counter
 
     # Print the best model
-    print(f"Best ARIMA{best_order} RMSE={best_score:.3f}")
+    #print(f"Best ARIMA Model{best_order} RMSE:{best_score:.3f}")
 
     return best_order, best_score, best_forecast
 
@@ -240,7 +240,7 @@ def ARIMA_test(test, train, best_order):
 ## DATA ANALYSIS ##
 
 # Data analysis function to compare the models using the RMSE
-def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, linearMSE, naiveMSE, seasonalMSE, ARIMAMSE):
+def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, linearMSE, naiveMSE, seasonalMSE, ARIMAMSE, best_order, best_score):
   
   # Calculate the mean consumption of the dataset
   mean_consumption = df['Total_feeder'].mean()
@@ -251,10 +251,11 @@ def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, 
   ARIMA_rmse = np.sqrt(ARIMAMSE) # Root Mean Squared Error for ARIMA Model
   
   # Print the RMSE for each model
-  print('\n\nRoot Mean Squared Error (RMSE) for each model:') 
-  print(f"Linear Regression RMSE: {linear_rmse}")
+  print('\n\nRoot Mean Squared Error (RMSE)\n') 
   print(f"Naive Model RMSE: {naive_rmse}")
   print(f"Seasonal Naive Model RMSE: {seasonal_rmse}")
+  print(f"Linear Regression RMSE: {linear_rmse}")
+  print(f"Best ARIMA Model {best_order} RMSE: {best_score:.3f}")
   print('\n\n')
 
   # Calculate the RMSE percentage for each model
@@ -264,7 +265,7 @@ def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, 
   rmse_ARIMA = round((ARIMA_rmse / mean_consumption) * 100,2)
 
   # Print the RMSE error percentage for each model
-  print(f'Error from main;\nLinear error (%): {rmse_linear_pct}% \nNaive error (%) {rmse_naive_pct}% \nSeasonal naive error (%): {rmse_seasonal_naive_pct}%\nARIMA model error (%): {rmse_ARIMA}%')
+  print(f'Precentage Error\n\nNaive Model Error: {rmse_naive_pct}% \nSeasonal Naive Model Error: {rmse_seasonal_naive_pct}%\nLinear Regression Model Error: {rmse_linear_pct}%\nARIMA Model Error: {rmse_ARIMA}%')
 
 
 ## PLOTTING FUNCTIONS ##
@@ -322,24 +323,26 @@ def main(df):
 
   # Loop through the first 5 weeks
   for i, week_name in enumerate(week_list[:1]):  
-        print(f"\nProcessing Week {i + 1}: {week_name}\n") # Print the current week being processed
+        print(f"\nProcessing Week {i + 1}: {week_name}") # Print the current week being processed
 
         train, test = train_test_split(week_list, full_weeks, i) # Get train and test data for the current week
 
-        best_order, best_rmse, best_forecast = evaluate_models(train, test) # # Evaluate best order for current ARIMA model
-
+        best_order, best_score, best_forecast = evaluate_models(train, test) # # Evaluate best order for current ARIMA model
         best_forecast_series = pd.Series(best_forecast, index=test.set_index('Time').index) # Convert forecast to pandas Series
-
+       
+        print('\n\n\nMean Squared Error (MSE)\n')
         # Run prediction models
-        predictionsLinear, linearMSE = linear_regression(train, test)
         predictionsNaive, naiveMSE = naive_model(train, test)
         predictionsSeasonalNaive, seasonalMSE = seasonal_naive_model(train, test)
+        predictionsLinear, linearMSE = linear_regression(train, test)
         ARIMAMSE, test_forecast_series = ARIMA_test(test, train, best_order)
 
-        # Data analysis
-        dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, linearMSE, naiveMSE, seasonalMSE, ARIMAMSE)
 
-        # Plot predictions
+
+        # Data analysis
+        dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, linearMSE, naiveMSE, seasonalMSE, ARIMAMSE, best_order, best_score)
+
+  
         # Plot the Naive Model
         Naive = Plotting(test, predictionsNaive, "Naive Model", "red", "Naive Model Forecast")
         Naive.graph()
@@ -352,11 +355,8 @@ def main(df):
         linear_Regression = Plotting(test, predictionsLinear, "Linear Regression Model", "orange", "Linear Regression Forecast")
         linear_Regression.graph()
 
+        # Plot the ARMIA Model
         ARIMA = Plotting(test, test_forecast_series, "ARIMA Model", "purple", "ARIMA Forecast")
         ARIMA.arima_plot()
-
-        #plot_ARIMA_model(train, test, test_forecast_series)
   
 main(df) # Calling the main function
-
-  
