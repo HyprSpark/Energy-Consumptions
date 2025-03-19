@@ -1,4 +1,7 @@
-# Importing the necessary libraries
+# Description: This program reads a dataset and predicts the energy consumption using different models such as Naive, Seasonal Naive, Linear Regression and ARIMA.
+## IMPORTING LIBRARIES ##
+
+
 import pandas as pd
 import sys
 import matplotlib.pyplot as plt
@@ -9,7 +12,13 @@ from sklearn.metrics import mean_squared_error
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.arima.model import ARIMA
+import warnings
 
+# Ignoring the warnings set when testing the ARIMA model
+warnings.filterwarnings("ignore")
+
+
+## DATA READING ##
 
 
 # Attempting to read the data file
@@ -22,7 +31,7 @@ except FileNotFoundError: # Checking if the file is not found
   sys.exit() # Exits the program,.-l
 
 
-### DATA PREPROCESSING ###
+## DATA PREPROCESSING ##
 
 
 # Converting the string into a datetime format
@@ -32,37 +41,45 @@ def time_period(df):
   
   return df
 
-# Grouping the data by days
-def day_grouping(df):
-  grouped_df = df.groupby(df['Time'].dt.date) # Grouping the data by days
+# Filtering the data for the desired weeks that include any kind of power usage
+def week_grouping(df):
+    grouped = df.groupby(pd.Grouper(key='Time', freq='W-MON'))  # Group by weeks (starting Monday)
+    
+    filtered_groups = {
+        name: group for name, group in grouped
+        if group['Time'].dt.date.nunique() == 7 and not group['Total_feeder'].isna().any()
+    }
+    
+    return filtered_groups
 
-  return grouped_df
+# Splitting the data into training and testing data
+def train_test_split(week_list, full_weeks, i):
+    
 
-# Filtering the data for the desired days that include any kind of power usage
-def filtered_empty_days(grouped_df):
-  filtered_days = grouped_df.filter(lambda x: x['Total_feeder'].notna().any()) #filters using notna() function with any() function
-  filtered_days['Total_feeder'] = filtered_days['Total_feeder'].fillna(0) # Filling the NaN values with 0
+    week_name = list(full_weeks.keys())[i]  #  Selecting 'i' week
+    week_df = full_weeks[week_name]  # Get the corresponding DataFrame
 
-  return filtered_days
+    week_df['Time'] = pd.to_datetime(week_df['Time']) # Converting the 'Time' column to datetime
 
-# Splitting the data into training and testing sets based on a custom date
-def custom_train_test_split(filtered_days):
+    days = list(week_df.groupby(week_df['Time'].dt.normalize()))  # Group by date
+    train_data = [group for _, group in days[:6]]  # First 6 days for training
+    test_data = [group for _, group in days[6:7]]  # Last day for testing
 
-  train = filtered_days[(filtered_days['Time'] >= pd.to_datetime('2013-05-13', format='%Y-%m-%d')) & (filtered_days['Time'] <= pd.to_datetime('2013-05-20', format='%Y-%m-%d'))] # Training set
-  test = filtered_days[(filtered_days['Time'] > pd.to_datetime('2013-05-20', format='%Y-%m-%d')) & (filtered_days['Time'] <= pd.to_datetime('2013-05-21', format='%Y-%m-%d'))] # Testing set
+    train_data, test_data = pd.concat(train_data), pd.concat(test_data) # Concatenating the data 
 
-  return train, test
+    return  train_data, test_data
 
 
-### PREDICTION MODELS ###
+## PREDICTION MODELS ##
 
 
 # Making predictions using the Naive algorithm, most basic method
 def naive_model(train, test):
+    
     # Use the last observed value for all future predictions
     last_value = train['Total_feeder'].iloc[-1]
     
-    predictions = np.full(len(test), last_value)
+    predictions = np.full(len(test), last_value) # Filling the predictions with the last value
 
     # Calculate Mean Squared Error
     mse = mean_squared_error(test['Total_feeder'], predictions)
@@ -72,7 +89,7 @@ def naive_model(train, test):
 
 # Making predictions using the Seasonal Naive algorithm to try and get a better prediction with trends
 def seasonal_naive_model(train, test, period=24):
-    test = test.copy()
+    test = test.copy() # Creating a copy of the test data
 
     # Shift data by 'period' steps
     test['Predictions'] = train['Total_feeder'].shift(period).iloc[-len(test):].values
@@ -100,20 +117,18 @@ def linear_regression(train, test):
     # Extracting additional time-based features
     train['DayOfWeek'] = train['Time'].dt.dayofweek
     train['Hour'] = train['Time'].dt.hour
-    train['Month'] = train['Time'].dt.month
     train['Day'] = train['Time'].dt.day
 
     # Extracting additional time-based features
     test['DayOfWeek'] = test['Time'].dt.dayofweek
     test['Hour'] = test['Time'].dt.hour
-    test['Month'] = test['Time'].dt.month
     test['Day'] = test['Time'].dt.day
 
     # Prepare features and target
-    X_train = train[['DayOfWeek', 'Hour', 'Month', 'Day']] # Features
+    X_train = train[['DayOfWeek', 'Hour', 'Day']] # Features
     y_train = train['Total_feeder'] # Target
 
-    X_test = test[['DayOfWeek', 'Hour', 'Month', 'Day']] # Features
+    X_test = test[['DayOfWeek', 'Hour', 'Day']] # Features
     y_test = test['Total_feeder'] # Target
 
     # Drop NaN values if any
@@ -133,8 +148,72 @@ def linear_regression(train, test):
     
     return predictions, mse
 
+# Evaluate an ARIMA model for a given order (p,d,q)
+def evaluate_arima_model(train, test, order):
+    try:
+        train = train.set_index('Time')
+        test = test.set_index('Time')
+
+        train = train.asfreq('h')
+        test = test.asfreq('h')
+
+        # Fit ARIMA model
+        model = ARIMA(train['Total_feeder'], order=order)
+        model_fit = model.fit()
+
+        # Forecasting test set
+        forecast = model_fit.forecast(steps=len(test))
+
+        # Compute RMSE
+        rmse = np.sqrt(mean_squared_error(test['Total_feeder'], forecast))
+
+        return rmse, forecast
+    except Exception as e:
+        print(f"Error with ARIMA{order}: {e}")
+        return float("inf"), None
+    
+# Evaluate an ARIMA model for a given order (p,d,q)
+def evaluate_models(train, test):
+    
+    # Define the p, d, q values to test
+    p_values = range(8, 12, 2)
+    d_values = range(0, 4)
+    q_values = range(0, 4)
+    
+    best_score, best_order, best_forecast = float("inf"), None, None # Initialize variables to store the best model
+    total_tests = len(p_values) * len(d_values) * len(q_values)  # Total number of ARIMA models being tested
+
+    i = 1  # Initialize counter for progress tracking
+
+    # Loop through all possible combinations of p, d, q values
+    for p in p_values:
+        for d in d_values:
+            for q in q_values:
+                order = (p, d, q)
+
+                # Evaluate the ARIMA model
+                try:
+                    rmse, forecast = evaluate_arima_model(train, test, order)
+
+                    # Update the best model if the current model is better
+                    if rmse < best_score:
+                        best_score, best_order, best_forecast = rmse, order, forecast
+
+                # Skip the current model if an error occurs
+                except Exception as e:
+                    continue
+                
+                # Print progress
+                print(f"ORDER TESTED {i}/{total_tests}", end='\r')
+                i += 1  # Increment the counter
+
+    # Print the best model
+    print(f"Best ARIMA{best_order} RMSE={best_score:.3f}")
+
+    return best_order, best_score, best_forecast
+
 # Making predictions using the ARIMA model
-def ARIMA_test(test, train):
+def ARIMA_test(test, train, best_order):
 
   # Set the index to the 'Time' column
   train = train.set_index('Time')
@@ -145,14 +224,12 @@ def ARIMA_test(test, train):
   test = test.asfreq('h')
 
   # Create the ARIMA model
-  model_train = ARIMA(train['Total_feeder'], order=(12,1,1))
+  model_train = ARIMA(train['Total_feeder'], order=(best_order))
   model_train_fit = model_train.fit()
 
-  # Forecast the data
-  test_forecast = model_train_fit.forecast(steps=30)
+  test_forecast = model_train_fit.forecast(steps=len(test))  # Forecast the data
 
-  # Create a series for the forecast
-  test_forecast_series = pd.Series(test_forecast, index=test.index)
+  test_forecast_series = pd.Series(test_forecast) # Create a series for the forecast
 
   # Calculate the Mean Squared Error
   ARMIAMSE = mean_squared_error(test['Total_feeder'], test_forecast_series)
@@ -160,14 +237,13 @@ def ARIMA_test(test, train):
 
   return ARMIAMSE, test_forecast_series
 
-### DATA ANALYSIS ###
+## DATA ANALYSIS ##
 
 # Data analysis function to compare the models using the RMSE
 def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, linearMSE, naiveMSE, seasonalMSE, ARIMAMSE):
   
   # Calculate the mean consumption of the dataset
   mean_consumption = df['Total_feeder'].mean()
-  print(mean_consumption)
 
   linear_rmse = np.sqrt(linearMSE) # Root Mean Squared Error for Linear Regression
   naive_rmse = np.sqrt(naiveMSE) # Root Mean Squared Error for Naive Model
@@ -188,9 +264,11 @@ def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, 
   rmse_ARIMA = round((ARIMA_rmse / mean_consumption) * 100,2)
 
   # Print the RMSE error percentage for each model
-  print(f'Error from main;\nLinear error (%): {rmse_linear_pct}% \nNaive error (%) {rmse_naive_pct}% \nSeasonal naive error (%): {rmse_seasonal_naive_pct}%\nRMSE error for ARIMA model: {rmse_ARIMA}%')
+  print(f'Error from main;\nLinear error (%): {rmse_linear_pct}% \nNaive error (%) {rmse_naive_pct}% \nSeasonal naive error (%): {rmse_seasonal_naive_pct}%\nARIMA model error (%): {rmse_ARIMA}%')
+
 
 ## PLOTTING FUNCTIONS ##
+
 class Plotting:
     def __init__(self, test, model, label, colour, title):
     
@@ -202,89 +280,83 @@ class Plotting:
         return
 
     def graph(self):
+        self.test = self.test.copy()
+        self.test.index = self.test['Time']
         sns.set_theme(style="whitegrid")
         plt.figure(figsize=(10,6))
         plt.plot(self.test['Total_feeder'], label='Testing Data', color='blue')
         plt.plot(self.test.index, self.model, label=self.label, color=self.colour, linestyle='dashed')
 
         plt.title(self.title)
-        plt.xlabel('Date')
-        plt.ylabel('Energy Consumption') 
+        plt.xlabel('Date (month, day, hour)')
+        plt.ylabel('Energy Consumption (W)') 
+        plt.legend()
+        plt.show()
+        return
+    def arima_plot(self):
+        self.test = self.test.copy()
+        self.test.index = self.test['Time']
+        self.test = self.test.asfreq('h')
+    
+        sns.set_theme(style="whitegrid")
+        plt.figure(figsize=(10,6))
+        plt.plot(self.test['Total_feeder'], label='Testing Data', color='blue')
+        plt.plot(self.test.index,self.model, label=self.label, color=self.colour, linestyle='dashed')
+
+        plt.title(self.title)
+        plt.xlabel('Date (month, day, hour)')
+        plt.ylabel('Energy Consumption (W)') 
         plt.legend()
         plt.show()
         return
 
-def plot_ARIMA_model(test, test_forecast_series):
-
-  # Set the index to the 'Time' column
-  test = test.set_index('Time')
-
-  # Resample the data to hourly
-  test = test.asfreq('h')
-
-    
-  # Plot the ARIMA forecast
-  sns.set_theme(style="whitegrid")
-  plt.figure(figsize=(10,6))
-  plt.plot(test['Total_feeder'], label='Testing Data', color='blue')
-  plt.plot(test_forecast_series, label='ARIMA Forecast', color='red', linestyle='dashed')  
-
-  plt.title('ARIMA Model Forecast')
-  plt.xlabel('Date')
-  plt.ylabel('Energy Consumption')
-  plt.legend()
-  plt.show()
-
-
 ### MAIN FUNCTION ###
 
+
 def main(df):
-  # Converting the string into a datetime format
-  df = time_period(df)
+  df = time_period(df) # Converting the string into a datetime format
 
-  # Grouping the data by days
-  grouped_df = day_grouping(df)
+  # Grouping the data by Weeks
+  full_weeks = week_grouping(df)
+  week_list = list(full_weeks.keys()) # Getting the list of weeks
 
-  # Filtering the data for the desired days that include any kind of power usage
-  filtered_days = filtered_empty_days(grouped_df)
+  # Loop through the first 5 weeks
+  for i, week_name in enumerate(week_list[:1]):  
+        print(f"\nProcessing Week {i + 1}: {week_name}\n") # Print the current week being processed
 
-  # Splitting the data into training and testing sets based on a custom date
-  train, test = custom_train_test_split(filtered_days)
+        train, test = train_test_split(week_list, full_weeks, i) # Get train and test data for the current week
 
-  predictionsLinear, linearMSE = linear_regression(train, test) # Making predictions using the Linear Regression algorithm
+        best_order, best_rmse, best_forecast = evaluate_models(train, test) # # Evaluate best order for current ARIMA model
 
-  predictionsNaive, naiveMSE = naive_model(train, test) #   Making predictions using the Naive algorithm, most basic method
+        best_forecast_series = pd.Series(best_forecast, index=test.set_index('Time').index) # Convert forecast to pandas Series
 
-  predictionsSeasonalNaive, seasonalMSE = seasonal_naive_model(train, test) # Making predictions using the Seasonal Naive algorithm to try and get a better prediction with trends
+        # Run prediction models
+        predictionsLinear, linearMSE = linear_regression(train, test)
+        predictionsNaive, naiveMSE = naive_model(train, test)
+        predictionsSeasonalNaive, seasonalMSE = seasonal_naive_model(train, test)
+        ARIMAMSE, test_forecast_series = ARIMA_test(test, train, best_order)
 
-  ARIMAMSE, test_forecast_series = ARIMA_test(test, train) # ARIMA test
+        # Data analysis
+        dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, linearMSE, naiveMSE, seasonalMSE, ARIMAMSE)
 
-  dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, linearMSE, naiveMSE, seasonalMSE, ARIMAMSE) # Data analysis function to compare the models using the RMSE
-
-  # Print the predictions for each model
-  print(predictionsLinear, '\n\n')
-  print(predictionsNaive, '\n\n')
-  print(predictionsSeasonalNaive, '\n\n')
-
-  # Plot the Naive Model
-  Naive = Plotting(test, predictionsNaive, "Naive Model", "red", "Naive Model Forecast")
-  Naive.graph()
+        # Plot predictions
+        # Plot the Naive Model
+        Naive = Plotting(test, predictionsNaive, "Naive Model", "red", "Naive Model Forecast")
+        Naive.graph()
   
-  # Plot the Seasonal Naive Model
-  Seasonal_Naive = Plotting(test, predictionsSeasonalNaive, "Seasonal Naive Model", "green", "Seasonal Naive Model Forecast")
-  Seasonal_Naive.graph()
+        # Plot the Seasonal Naive Model
+        Seasonal_Naive = Plotting(test, predictionsSeasonalNaive, "Seasonal Naive Model", "green", "Seasonal Naive Model Forecast")
+        Seasonal_Naive.graph()
 
-  # Plot the Linaer Regression Model
-  linear_Regression = Plotting(test, predictionsLinear, "Linear Regression", "orange", "Linear Regression Forecast")
-  linear_Regression.graph()
+        # Plot the Linaer Regression Model
+        linear_Regression = Plotting(test, predictionsLinear, "Linear Regression Model", "orange", "Linear Regression Forecast")
+        linear_Regression.graph()
 
-  # Plot the ARIMA Model
-  plot_ARIMA_model(test, test_forecast_series)
+        ARIMA = Plotting(test, test_forecast_series, "ARIMA Model", "purple", "ARIMA Forecast")
+        ARIMA.arima_plot()
 
-
-  
+        #plot_ARIMA_model(train, test, test_forecast_series)
   
 main(df) # Calling the main function
 
-#plt.xticks(rotation=45)
-
+  
