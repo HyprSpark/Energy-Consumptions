@@ -287,7 +287,4 @@ def main(df):
 main(df) # Calling the main function
 
 #plt.xticks(rotation=45)
-  
-main(df) # Calling the main function
 
-#plt.xticks(rotation=45)
