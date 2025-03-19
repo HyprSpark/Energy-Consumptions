@@ -191,46 +191,28 @@ def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, 
   print(f'Error from main;\nLinear error (%): {rmse_linear_pct}% \nNaive error (%) {rmse_naive_pct}% \nSeasonal naive error (%): {rmse_seasonal_naive_pct}%\nRMSE error for ARIMA model: {rmse_ARIMA}%')
 
 ## PLOTTING FUNCTIONS ##
+class Plotting:
+    def __init__(self, test, model, label, colour, title):
+    
+        self.test = test
+        self.model = model
+        self.label = label 
+        self.colour = colour
+        self.title = title
+        return
 
-def plot_naive_model(test, predictionsNaive):
+    def graph(self):
+        sns.set_theme(style="whitegrid")
+        plt.figure(figsize=(10,6))
+        plt.plot(self.test['Total_feeder'], label='Testing Data', color='blue')
+        plt.plot(self.test.index, self.model, label=self.label, color=self.colour, linestyle='dashed')
 
-  sns.set_theme(style="whitegrid")
-  plt.figure(figsize=(10,6))
-  plt.plot(test['Total_feeder'], label='Testing Data', color='blue')
-  plt.plot(test.index, predictionsNaive, label='Naive Forecast', color='red', linestyle='dashed')
-
-  plt.title('Naive Model Forecast')
-  plt.xlabel('Date')
-  plt.ylabel('Enegy Consumption')
-  plt.legend()
-  plt.show()
-
-def plot_seasonal_naive_model(test, predictionsSeasonalNaive):
-  
-  sns.set_theme(style="whitegrid")
-  plt.figure(figsize=(10,6))
-
-  plt.plot(test['Total_feeder'], label = 'Testing Data', color = 'blue')
-  plt.plot(test.index, predictionsSeasonalNaive, label = 'Seasonal Naive Forecast', color = 'red', linestyle='dashed')
-
-  plt.title('Seasonal Naive Model Forecast')
-  plt.xlabel('Date')
-  plt.ylabel('Energy Consumption')
-  plt.legend()
-  plt.show()
-
-def plot_Linear_Regression_Model(test, predictionsLinear):
-
-  sns.set_theme(style="whitegrid")
-  plt.figure(figsize=(10,6))
-  plt.title('Linear Regression Model Forecast')
-  plt.ylabel('Energy Consumption')
-  plt.xlabel('Date')
-
-  plt.plot(test['Total_feeder'], label='Test Data', color='blue')
-  plt.plot(test.index, predictionsLinear, label='Linear Regression Model', color='red', linestyle='dashed')
-  plt.legend()
-  plt.show()
+        plt.title(self.title)
+        plt.xlabel('Date')
+        plt.ylabel('Energy Consumption') 
+        plt.legend()
+        plt.show()
+        return
 
 def plot_ARIMA_model(test, test_forecast_series):
 
@@ -252,7 +234,6 @@ def plot_ARIMA_model(test, test_forecast_series):
   plt.ylabel('Energy Consumption')
   plt.legend()
   plt.show()
-
 
 
 ### MAIN FUNCTION ###
@@ -286,18 +267,26 @@ def main(df):
   print(predictionsSeasonalNaive, '\n\n')
 
   # Plot the Naive Model
-  plot_naive_model(test, predictionsNaive)
-
+  Naive = Plotting(test, predictionsNaive, "Naive Model", "red", "Naive Model Forecast")
+  Naive.graph()
+  
   # Plot the Seasonal Naive Model
-  plot_seasonal_naive_model(test, predictionsSeasonalNaive)
+  Seasonal_Naive = Plotting(test, predictionsSeasonalNaive, "Seasonal Naive Model", "green", "Seasonal Naive Model Forecast")
+  Seasonal_Naive.graph()
 
   # Plot the Linaer Regression Model
-  plot_Linear_Regression_Model(test, predictionsLinear)
+  linear_Regression = Plotting(test, predictionsLinear, "Linear Regression", "orange", "Linear Regression Forecast")
+  linear_Regression.graph()
 
   # Plot the ARIMA Model
   plot_ARIMA_model(test, test_forecast_series)
 
+
   
+  
+main(df) # Calling the main function
+
+#plt.xticks(rotation=45)
   
 main(df) # Calling the main function
 
