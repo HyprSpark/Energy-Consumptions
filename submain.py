@@ -9,8 +9,6 @@ import seaborn as sns
 import numpy as np
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
-from statsmodels.tsa.stattools import adfuller
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
 from statsmodels.tsa.arima.model import ARIMA
 import warnings
 
@@ -232,10 +230,10 @@ def ARIMA_test(test, train, best_order):
   test_forecast_series = pd.Series(test_forecast) # Create a series for the forecast
 
   # Calculate the Mean Squared Error
-  ARMIAMSE = mean_squared_error(test['Total_feeder'], test_forecast_series)
-  print(f'ARIMA Model MSE: {ARMIAMSE}')
+  ARIMAMSE = mean_squared_error(test['Total_feeder'], test_forecast_series)
+  print(f'ARIMA Model MSE: {ARIMAMSE}')
 
-  return ARMIAMSE, test_forecast_series
+  return ARIMAMSE, test_forecast_series
 
 ## DATA ANALYSIS ##
 
@@ -355,8 +353,10 @@ def main(df):
         linear_Regression = Plotting(test, predictionsLinear, "Linear Regression Model", "orange", "Linear Regression Forecast")
         linear_Regression.graph()
 
-        # Plot the ARMIA Model
+        # Plot the ARIMA Model
         ARIMA = Plotting(test, test_forecast_series, "ARIMA Model", "purple", "ARIMA Forecast")
         ARIMA.arima_plot()
   
 main(df) # Calling the main function
+
+  
