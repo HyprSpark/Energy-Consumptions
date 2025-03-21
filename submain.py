@@ -242,7 +242,7 @@ def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, 
   print('\n\nRoot Mean Squared Error (RMSE)\n') 
   print(f"Naive Model RMSE: {naive_rmse}")
   print(f"Seasonal Naive Model RMSE: {seasonal_rmse}")
-  print(f"Linear Regression RMSE: {linear_rmse}")
+  print(f"Linear Regression Model RMSE: {linear_rmse}")
   print(f"Best ARIMA Model {best_order} RMSE: {best_score:.3f}")
   print('\n\n')
 
@@ -315,7 +315,7 @@ def main(df):
   week_list = list(full_weeks.keys()) # Getting the list of weeks
 
   # Loop through the first 5 weeks
-  for i, week_name in enumerate(week_list[:1]):  
+  for i, week_name in enumerate(week_list[:3]):  
         print(f"\nProcessing Week {i + 1}: {week_name}") # Print the current week being processed
 
         train, test = train_test_split(week_list, full_weeks, i) # Get train and test data for the current week
@@ -352,5 +352,7 @@ def main(df):
       
 main(df) # Calling the main function
 
+
+  
 
   
