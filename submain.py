@@ -1,5 +1,5 @@
 # Description: This program reads a dataset and predicts the energy consumption using different models such as Naive, Seasonal Naive, Linear Regression and ARIMA.
-## IMPORTING LIBRARIES ##
+#### IMPORTING LIBRARIES ####
 
 import pandas as pd
 import sys
@@ -14,7 +14,8 @@ import warnings
 # Ignoring the warnings set when testing the ARIMA model
 warnings.filterwarnings("ignore")
 
-## DATA READING ##
+#### DATA READING ####
+
 # Attempting to read the data file
 try:
   df = pd.read_csv('DataSheets/Energy Advice and Cunsumption Prediction Dataset.csv', names=['Time', 'Total_feeder'], skiprows=1) # Giving the columns names and skipping the first row
@@ -24,7 +25,7 @@ except FileNotFoundError: # Checking if the file is not found
   print('File name incorrect or not found')
   sys.exit() # Exits the program,.-l
 
-## DATA PREPROCESSING ##
+#### DATA PREPROCESSING ####
 
 # Converting the string into a datetime format
 def time_period(df):
@@ -59,7 +60,7 @@ def train_test_split(week_list, full_weeks, i):
 
     return  train_data, test_data
 
-## PREDICTION MODELS ##
+#### PREDICTION MODELS ####
 
 # Making predictions using the Naive algorithm, most basic method
 def naive_model(train, test):
@@ -225,7 +226,7 @@ def ARIMA_test(test, train, best_order):
 
   return ARIMAMSE, test_forecast_series
 
-## DATA ANALYSIS ##
+#### DATA ANALYSIS ####
 
 # Data analysis function to compare the models using the RMSE
 def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, linearMSE, naiveMSE, seasonalMSE, ARIMAMSE, best_order, best_score):
@@ -243,7 +244,7 @@ def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, 
   print(f"Naive Model RMSE: {naive_rmse}")
   print(f"Seasonal Naive Model RMSE: {seasonal_rmse}")
   print(f"Linear Regression Model RMSE: {linear_rmse}")
-  print(f"Best ARIMA Model {best_order} RMSE: {best_score:.3f}")
+  print(f"Best ARIMA Model RMSE: {best_score:.3f}")
   print('\n\n')
 
   # Calculate the RMSE percentage for each model
@@ -255,7 +256,7 @@ def dataAnalysis(predictionsLinear, predictionsNaive, predictionsSeasonalNaive, 
   # Print the RMSE error percentage for each model
   print(f'Precentage Error\n\nNaive Model Error: {rmse_naive_pct}% \nSeasonal Naive Model Error: {rmse_seasonal_naive_pct}%\nLinear Regression Model Error: {rmse_linear_pct}%\nARIMA Model Error: {rmse_ARIMA}%')
 
-## PLOTTING FUNCTIONS ##
+#### PLOTTING FUNCTIONS ####
 
 #Creating plot class
 class Plotting:
@@ -305,7 +306,7 @@ class Plotting:
         plt.show()
         return
 
-### MAIN FUNCTION ###
+#### MAIN FUNCTION ####
 
 def main(df):
   df = time_period(df) # Converting the string into a datetime format
