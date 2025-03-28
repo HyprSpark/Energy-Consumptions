@@ -308,50 +308,58 @@ class Plotting:
 ### MAIN FUNCTION ###
 
 def main(df):
-  df = time_period(df) # Converting the string into a datetime format
+    df = time_period(df) # Converting the string into a datetime format
 
-  # Grouping the data by Weeks
-  full_weeks = week_grouping(df)
-  week_list = list(full_weeks.keys()) # Getting the list of weeks
-
+    # Grouping the data by Weeks
+    full_weeks = week_grouping(df)
+    week_list = list(full_weeks.keys()) # Getting the list of weeks
+    nO_weeks = len(week_list) # Getting the number of weeks
+    while True:
+        try:
+            select = int(input(f'Enter the number of weeks to process, max {nO_weeks}: ')) # Asking the user to select the number of weeks to process
+            if select > nO_weeks or select < 1: # Checking if the input is valid
+                print(f'Please enter a number between 1 and {nO_weeks}')
+                continue
+            else:
+                break
+        except ValueError:
+            print("Invalid input. Please enter a number.")
   # Loop through the first 5 weeks
-  for i, week_name in enumerate(week_list[:5]):  
-        print(f"\nProcessing Week {i + 1}: {week_name}") # Print the current week being processed
+    for i, week_name in enumerate(week_list[:select]): # Looping through the weeks
+            print(f"\nProcessing Week {i + 1}: {week_name}") # Print the current week being processed
 
-        train, test = train_test_split(full_weeks, i) # Get train and test data for the current week
+            train, test = train_test_split(full_weeks, i) # Get train and test data for the current week
 
-        best_order, best_score, best_forecast = evaluate_models(train, test) # # Evaluate best order for current ARIMA model
-        best_forecast_series = pd.Series(best_forecast, index=test.set_index('Time').index) # Convert forecast to pandas Series
-       
-        print('\n\n\nMean Squared Error (MSE)\n') # Priniting MSE Title 
+            best_order, best_score, best_forecast = evaluate_models(train, test) # # Evaluate best order for current ARIMA model
+            best_forecast_series = pd.Series(best_forecast, index=test.set_index('Time').index) # Convert forecast to pandas Series
+        
+            print('\n\n\nMean Squared Error (MSE)\n') # Priniting MSE Title 
 
-        # Run prediction models
-        predictionsNaive, naiveMSE = naive_model(train, test)
-        predictionsSeasonalNaive, seasonalMSE = seasonal_naive_model(train, test)
-        predictionsLinear, linearMSE = linear_regression(train, test)
-        ARIMAMSE, test_forecast_series = ARIMA_test(test, train, best_order)
+            # Run prediction models
+            predictionsNaive, naiveMSE = naive_model(train, test)
+            predictionsSeasonalNaive, seasonalMSE = seasonal_naive_model(train, test)
+            predictionsLinear, linearMSE = linear_regression(train, test)
+            ARIMAMSE, test_forecast_series = ARIMA_test(test, train, best_order)
 
-        # Data analysis
-        dataAnalysis(linearMSE, naiveMSE, seasonalMSE, ARIMAMSE)
+            # Data analysis
+            dataAnalysis(linearMSE, naiveMSE, seasonalMSE, ARIMAMSE)
 
-        # Ploting the Naive Models
-        Naive = Plotting(test, predictionsNaive, "Naive Model", "red", "Naive Model Forecast")
-        Naive.graph()
-  
-        # Ploting the Seasonal Naive Models
-        Seasonal_Naive = Plotting(test, predictionsSeasonalNaive, "Seasonal Naive Model", "green", "Seasonal Naive Model Forecast")
-        Seasonal_Naive.graph()
+            # Ploting the Naive Models
+            Naive = Plotting(test, predictionsNaive, "Naive Model", "red", "Naive Model Forecast")
+            Naive.graph()
+    
+            # Ploting the Seasonal Naive Models
+            Seasonal_Naive = Plotting(test, predictionsSeasonalNaive, "Seasonal Naive Model", "green", "Seasonal Naive Model Forecast")
+            Seasonal_Naive.graph()
 
-        # Ploting the Linaer Regression Models
-        linear_Regression = Plotting(test, predictionsLinear, "Linear Regression Model", "orange", "Linear Regression Forecast")
-        linear_Regression.graph()
+            # Ploting the Linaer Regression Models
+            linear_Regression = Plotting(test, predictionsLinear, "Linear Regression Model", "orange", "Linear Regression Forecast")
+            linear_Regression.graph()
 
-        # Ploting the ARIMA Models
-        ARIMA = Plotting(test, test_forecast_series, "ARIMA Model", "purple", "ARIMA Forecast")
-        ARIMA.arima_plot()
+            # Ploting the ARIMA Models
+            ARIMA = Plotting(test, test_forecast_series, "ARIMA Model", "purple", "ARIMA Forecast")
+            ARIMA.arima_plot()
       
-if __name__ == '__main__':
+if __name__ == '__main__': # Checking if the program is being run directly
   main(df) # Calling the main function
-
-
   
