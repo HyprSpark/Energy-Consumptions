@@ -239,12 +239,12 @@ def dataAnalysis(linearMSE, naiveMSE, seasonalMSE, ARIMAMSE):
   ARIMA_rmse = np.sqrt(ARIMAMSE) # Root Mean Squared Error for ARIMA Model
   
   # Print the RMSE for each model
-  print('\n\nRoot Mean Squared Error (RMSE)\n') 
+  print('\n\nRoot Mean Squared Error (kWh)\n') 
   print(f"Naive Model RMSE: {naive_rmse}")
   print(f"Seasonal Naive Model RMSE: {seasonal_rmse}")
   print(f"Linear Regression RMSE: {linear_rmse}")
   print(f"ARIMA RMSE: {ARIMA_rmse}")
-  print('\n\n')
+  print('\n')
 
   # Calculate the RMSE percentage for each model
   rmse_linear_pct = round((linear_rmse / mean_consumption) * 100,2)
@@ -253,7 +253,7 @@ def dataAnalysis(linearMSE, naiveMSE, seasonalMSE, ARIMAMSE):
   rmse_ARIMA = round((ARIMA_rmse / mean_consumption) * 100,2)
 
   # Print the RMSE error percentage for each model
-  print(f'Precentage Error\n\nNaive Model Error: {rmse_naive_pct}% \nSeasonal Naive Model Error: {rmse_seasonal_naive_pct}%\nLinear Regression Model Error: {rmse_linear_pct}%\nARIMA Model Error: {rmse_ARIMA}%')
+  print(f'Precentage Error (%)\n\nNaive Model Error: {rmse_naive_pct} \nSeasonal Naive Model Error: {rmse_seasonal_naive_pct}\nLinear Regression Model Error: {rmse_linear_pct}\nARIMA Model Error: {rmse_ARIMA}')
 
 ## PLOTTING FUNCTIONS ##
 
@@ -333,7 +333,7 @@ def main(df):
             best_order, best_score, best_forecast = evaluate_models(train, test) # # Evaluate best order for current ARIMA model
             best_forecast_series = pd.Series(best_forecast, index=test.set_index('Time').index) # Convert forecast to pandas Series
         
-            print('\n\n\nMean Squared Error (MSE)\n') # Priniting MSE Title 
+            print('\n\n\nMean Squared Error (kWh²)\n') # Priniting MSE Title 
 
             # Run prediction models
             predictionsNaive, naiveMSE = naive_model(train, test)
